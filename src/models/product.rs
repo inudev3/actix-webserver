@@ -1,5 +1,5 @@
-use diesel::{PgConnection, QueryDsl, RunQueryDsl};
-use crate::db_connection::establish_connection;
+use diesel::{AsChangeset, PgConnection, QueryDsl, RunQueryDsl};
+use crate::db_connection::{establish_connection, PgPooledConnection};
 use crate::schema::products;
 use crate::schema::products::dsl;
 
@@ -13,52 +13,51 @@ pub struct Product{
 }
 impl Product{
 
-    pub fn find(id:&i32)->Result<Product, diesel::result::Error>{
-        let mut conn = establish_connection();
-        products::table.find(id).first(&mut conn)
+    pub fn find(id:&i32, conn:&mut PgPooledConnection)->Result<Product, diesel::result::Error>{
+        products::table.find(id).first(conn)
     }
-    pub fn destroy(id:&i32)->Result<(), diesel::result::Error>{
-        let mut conn = establish_connection();
-        diesel::delete(dsl::products.find(id)).execute(&mut conn)?;
+    pub fn destroy(id:&i32, conn:&mut PgPooledConnection)->Result<(), diesel::result::Error>{
+        diesel::delete(dsl::products.find(id)).execute(conn)?;
         Ok(())
     }
-    pub fn update(id:&i32, new_product:&NewProduct)->Result<(),diesel::result::Error>{
-        let mut conn = establish_connection();
+    pub fn update(id:&i32, new_product:&NewProduct, conn:&mut PgPooledConnection)->Result<(),diesel::result::Error>{
+
 
         diesel::update(dsl::products.find(id))
             .set(new_product)
-            .execute(&mut conn)?;
+            .execute(conn)?;
 
         Ok(())
     }
 }
-#[derive(Insertable,Deserialize)]
+#[derive(Insertable,Deserialize,AsChangeset)]
 #[table_name="products"]
 pub struct NewProduct{
     pub name:Option<String>,
     pub stock:Option<f64>,
     pub price:Option<i32>,
 }
+
 impl NewProduct{
-    pub fn create(&self)->Result<Product, diesel::result::Error>{
+    pub fn create(&self, conn:&mut PgPooledConnection)->Result<Product, diesel::result::Error>{
         use diesel::RunQueryDsl;
-        use crate::db_connection::establish_connection;
-        let mut conn = establish_connection();
-        diesel::insert_into(products::table).values(self).get_result(&mut conn)
+
+
+        diesel::insert_into(products::table).values(self).get_result(conn)
     }
 }
 
 #[derive(Serialize,Deserialize)]
 pub struct ProductList(Vec<Product>); //newtype-pattern, we can add any trait.
 impl ProductList{
-    pub fn list()->Self{
+    pub fn list(conn:&mut PgPooledConnection)->Self{
         use diesel::RunQueryDsl;
         use diesel::QueryDsl;
         use crate::schema::products::dsl::*;
-        use crate::db_connection::establish_connection;
-        let mut conn = establish_connection();
+
+
         let res = products.limit(10)
-            .load::<Product>(&mut conn)
+            .load::<Product>(conn)
             .expect("Error loading products");
         Self(res)
     }

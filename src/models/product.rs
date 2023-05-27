@@ -1,5 +1,6 @@
 use diesel::{AsChangeset, PgConnection, QueryDsl, RunQueryDsl};
 use crate::db_connection::{establish_connection, PgPooledConnection};
+use crate::errors::MyStoreError;
 use crate::schema::products;
 use crate::schema::products::dsl;
 
@@ -13,14 +14,14 @@ pub struct Product{
 }
 impl Product{
 
-    pub fn find(id:&i32, conn:&mut PgPooledConnection)->Result<Product, diesel::result::Error>{
-        products::table.find(id).first(conn)
+    pub fn find(id:&i32, conn:&mut PgConnection)->Result<Product, MyStoreError>{
+        products::table.find(id).first(conn)?
     }
-    pub fn destroy(id:&i32, conn:&mut PgPooledConnection)->Result<(), diesel::result::Error>{
+    pub fn destroy(id:&i32, conn:&mut PgConnection)->Result<(), MyStoreError>{
         diesel::delete(dsl::products.find(id)).execute(conn)?;
         Ok(())
     }
-    pub fn update(id:&i32, new_product:&NewProduct, conn:&mut PgPooledConnection)->Result<(),diesel::result::Error>{
+    pub fn update(id:&i32, new_product:&NewProduct, conn:&mut PgConnection)->Result<(),MyStoreError>{
 
 
         diesel::update(dsl::products.find(id))
@@ -39,18 +40,18 @@ pub struct NewProduct{
 }
 
 impl NewProduct{
-    pub fn create(&self, conn:&mut PgPooledConnection)->Result<Product, diesel::result::Error>{
+    pub fn create(&self, conn:&mut PgConnection)->Result<Product, MyStoreError>{
         use diesel::RunQueryDsl;
 
 
-        diesel::insert_into(products::table).values(self).get_result(conn)
+        diesel::insert_into(products::table).values(self).get_result(conn)?
     }
 }
 
 #[derive(Serialize,Deserialize)]
 pub struct ProductList(Vec<Product>); //newtype-pattern, we can add any trait.
 impl ProductList{
-    pub fn list(conn:&mut PgPooledConnection)->Self{
+    pub fn list(conn:&mut PgConnection)->Self{
         use diesel::RunQueryDsl;
         use diesel::QueryDsl;
         use crate::schema::products::dsl::*;

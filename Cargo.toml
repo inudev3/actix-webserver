@@ -8,12 +8,17 @@ edition = "2021"
 [dependencies]
 actix="0.13.0"
 actix-web="4.3.1"
-diesel={version="2.1.0", features=["postgres", "r2d2"]}
+diesel={version="2.1.0", features=["postgres", "r2d2", "chrono"]}
 dotenv="0.15.0"
 serde="1.0.9"
 serde_derive="1.0.9"
 serde_json="1.0.9"
+dotenv_codegen = "0.15.0"
 jsonwebtoken="8.3.0"
 bcrypt="0.14.0"
-chrono= "0.4.24"
-csrf="0.4.1"
+csrf-token = { git = "ssh://git@github.com/3dom-co-jp/csrf-token.git", branch="v0.2.x" }
+chrono= {version="0.4.21", features=["serde"]}
+
+env_logger = "0.10.0"
+actix-identity = "0.5.2"
+hex = "0.4.3"

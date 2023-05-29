@@ -1,8 +1,8 @@
 use actix_web::error::ErrorInternalServerError;
+use actix_web::HttpResponse;
 use chrono::{Duration, Local};
-#[macro_use]
-extern crate dotenv_codegen;
-use jsonwebtoken::{encode, EncodingKey, Header};
+
+use jsonwebtoken::{decode, DecodingKey, encode, EncodingKey, Header, Validation};
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -15,7 +15,7 @@ pub struct SlimUser{
     pub email:String,
     pub company:String,
 }
-impl From<Claim> for SlimUser{
+impl From<Claims> for SlimUser{
     fn from(claim: Claims) -> Self {
         Self{
             email:claim.sub,
@@ -36,6 +36,11 @@ pub fn create_token(email:&str, company:&str)->Result<String,actix_web::Error>{
     let claims = Claims::with_email(email,company);
     encode(&Header::default(), &claims, &EncodingKey::from_secret(get_secret()))
         .map_err(|e|ErrorInternalServerError(e))
+}
+pub fn decode_token(token: &str) -> Result<SlimUser, HttpResponse> {
+    decode::<Claims>(token, &DecodingKey::from_secret(get_secret()), &Validation::default())
+        .map(|data| data.claims.into())
+        .map_err(|e| HttpResponse::Unauthorized().json(e.to_string()))
 }
 fn get_secret<'a>()->&'a[u8]{
     dotenv!("JWT_SECRET").as_bytes()

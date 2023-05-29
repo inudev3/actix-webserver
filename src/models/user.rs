@@ -1,5 +1,5 @@
 use chrono::NaiveDateTime;
-
+use diesel::{Queryable, Insertable};
 #[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
 #[table_name = "users"]
 pub struct User {
@@ -25,7 +25,6 @@ pub struct NewUser {
 use bcrypt::{hash, DEFAULT_COST, verify};
 use diesel::{ExpressionMethods, PgConnection, QueryDsl, RunQueryDsl};
 use chrono::Local;
-use actix_csrf::extractor::{CsrfToken,CsrfGuarded};
 use diesel::associations::HasTable;
 use crate::db_connection::PgPooledConnection;
 use crate::errors::MyStoreError;
@@ -74,7 +73,7 @@ pub struct AuthUser {
 impl AuthUser {
     pub fn login(&self, conn: &mut PgConnection) -> Result<User, MyStoreError> {
         use crate::schema::users::dsl::email;
-        let mut records = (users::table).filter((email.eq(&self.email)))
+        let mut records = (users::table).filter(email.eq(&self.email))
             .load::<User>(conn)?;
         let user = records.pop().ok_or(MyStoreError::DBError(diesel::result::Error::NotFound))?;
         let verify_password = verify(&self.password, &user.password).map_err(|_err| MyStoreError::WrongPassword("Wrong password. please check again".to_string()))?;

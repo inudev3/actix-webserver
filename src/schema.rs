@@ -10,13 +10,14 @@ diesel::table! {
 }
 
 diesel::table! {
-    users (email) {
+    users (id) {
+        id -> Int4,
         #[max_length = 100]
         email -> Varchar,
+        #[max_length = 100]
+        company -> Varchar,
         #[max_length = 64]
         password -> Varchar,
-        #[max_length = 64]
-        company -> Varchar,
         created_at -> Timestamp,
     }
 }

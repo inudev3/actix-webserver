@@ -11,9 +11,9 @@ use crate::db_connection::{PgPool, PgPooledConnection};
 use crate::handlers::pg_pool_handler;
 use crate::models::product::{NewProduct, Product, ProductList};
 
-pub async fn index(_req: HttpRequest, pool:web::Data<PgPool>) ->actix_web::<HttpResponse> {
-    let mut pg_pool = pg_pool_handler(pool).expect("");
-    HttpResponse::Ok().json(ProductList::list( &mut pg_pool))
+pub async fn index(_req: HttpRequest, pool:web::Data<PgPool>) ->actix_web::Result<HttpResponse> {
+    let mut pg_pool = pg_pool_handler(pool)?;
+    Ok(HttpResponse::Ok().json(ProductList::list( &mut pg_pool)))
 }
 
 

@@ -1,4 +1,4 @@
-use diesel::{AsChangeset, PgConnection, QueryDsl, RunQueryDsl};
+use diesel::{AsChangeset, Queryable, Insertable,PgConnection, QueryDsl, RunQueryDsl};
 use crate::db_connection::{establish_connection, PgPooledConnection};
 use crate::errors::MyStoreError;
 use crate::schema::products;
@@ -15,7 +15,7 @@ pub struct Product{
 impl Product{
 
     pub fn find(id:&i32, conn:&mut PgConnection)->Result<Product, MyStoreError>{
-        products::table.find(id).first(conn)?
+        Ok(products::table.find(id).first(conn)?)
     }
     pub fn destroy(id:&i32, conn:&mut PgConnection)->Result<(), MyStoreError>{
         diesel::delete(dsl::products.find(id)).execute(conn)?;
@@ -44,7 +44,7 @@ impl NewProduct{
         use diesel::RunQueryDsl;
 
 
-        diesel::insert_into(products::table).values(self).get_result(conn)?
+        Ok(diesel::insert_into(products::table).values(self).get_result(conn)?)
     }
 }
 

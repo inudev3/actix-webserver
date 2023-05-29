@@ -4,6 +4,7 @@ use crate::db_connection::PgPool;
 use crate::handlers::pg_pool_handler;
 use crate::models::user::{RegisterUser, User};
 
+
 pub async fn register(new_user: web::Json<RegisterUser>, pool: web::Data<PgPool>)->actix_web::Result<HttpResponse>{
     let mut pg_pool = pg_pool_handler(pool)?;
     let register_user = new_user

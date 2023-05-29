@@ -28,10 +28,9 @@ impl From<CsrfError> for MyStoreError{
 }
 impl ResponseError for MyStoreError{
     fn error_response(&self) -> HttpResponse<BoxBody> {
-        use ServiceError::*;
         match self {
-            MyStoreError::DBError(_) | MyStoreError::HashError(_) => HttpResponse::InternalServerError().json(res),
-            MyStoreError::CsrfError(_) | MyStoreError::WrongPassword(_) | MyStoreError::PasswordNotMatch(_) => HttpResponse::BadRequest().json(res),
+            MyStoreError::DBError(_) | MyStoreError::HashError(_) => HttpResponse::InternalServerError().finish(),
+            MyStoreError::CsrfError(_) | MyStoreError::WrongPassword(_) | MyStoreError::PasswordNotMatch(_) => HttpResponse::BadRequest().finish(),
         }
     }
 }
@@ -41,7 +40,7 @@ impl fmt::Display for MyStoreError {
             MyStoreError::HashError(error) => write!(f, "{}", error),
             MyStoreError::DBError(error) => write!(f, "{}", error),
             MyStoreError::PasswordNotMatch(error) => write!(f, "{}", error),
-            MyStoreError::WrongPassword(error) => write!(f, "{}", error)
+            MyStoreError::WrongPassword(error) => write!(f, "{}", error),
             MyStoreError::CsrfError(error) => write!(f, "{}", error)
         }
     }

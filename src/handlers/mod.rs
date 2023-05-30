@@ -18,7 +18,7 @@ pub mod authentication;
 pub type LoggedUser = SlimUser;
 impl FromRequest for LoggedUser{
     type Error = actix_web::Error;
-    type Future = Result<Self,actix_web::Error>;
+    type Future = Ready<Result<Self,actix_web::Error>>;
 
     fn from_request(req: &HttpRequest, payload: &mut Payload) -> Self::Future {
         let protect = req.app_data::<AesGcmCsrfProtection>()
@@ -32,13 +32,13 @@ impl FromRequest for LoggedUser{
         let parsed_token = protect.parse_token(&token_bytes).map_err(|e| MyStoreError::CsrfError(CsrfError::InternalError)).expect("");
         let parsed_cookie = protect.parse_cookie(&cookie_bytes).map_err(|e| MyStoreError::CsrfError(CsrfError::InternalError)).expect("");
         if !protect.verify_token_pair(&parsed_token, &parsed_cookie){
-            return  MyStoreError::PasswordNotMatch("Token and Cookie do not match.".into()).into()
+            return  err(MyStoreError::PasswordNotMatch("Token and Cookie do not match.".into()).into())
         }
         if let Some(identity) = Identity::from_request(req, payload).into_inner().expect("").identity() {
             let user: LoggedUser = decode_token(&identity).expect("");
-            return Ok(user)
+            return ok(user);
         }
-        MyStoreError::CsrfError(CsrfError::ValidationFailure).into()
+        err(MyStoreError::CsrfError(CsrfError::ValidationFailure).into())
     }
 }
 

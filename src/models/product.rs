@@ -1,9 +1,10 @@
 use diesel::{AsChangeset, Queryable, Insertable,PgConnection, QueryDsl, RunQueryDsl};
+use diesel::associations::HasTable;
 use crate::db_connection::{establish_connection, PgPooledConnection};
 use crate::errors::MyStoreError;
 use crate::schema::products;
 use crate::schema::products::dsl;
-
+use serde::{Serialize,Deserialize};
 
 #[derive(Queryable,Serialize,Deserialize)]
 pub struct Product{
@@ -15,6 +16,7 @@ pub struct Product{
 impl Product{
 
     pub fn find(id:&i32, conn:&mut PgConnection)->Result<Product, MyStoreError>{
+
         Ok(products::table.find(id).first(conn)?)
     }
     pub fn destroy(id:&i32, conn:&mut PgConnection)->Result<(), MyStoreError>{
@@ -54,10 +56,9 @@ impl ProductList{
     pub fn list(conn:&mut PgConnection)->Self{
         use diesel::RunQueryDsl;
         use diesel::QueryDsl;
-        use crate::schema::products::dsl::*;
 
 
-        let res = products.limit(10)
+        let res = dsl::products.limit(10)
             .load::<Product>(conn)
             .expect("Error loading products");
         Self(res)
